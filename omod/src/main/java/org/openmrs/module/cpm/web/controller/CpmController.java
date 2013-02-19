@@ -1,5 +1,6 @@
 package org.openmrs.module.cpm.web.controller;
 
+import org.springframework.context.ApplicationContext;
 import com.google.common.collect.Lists;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
@@ -26,10 +27,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.*;
 
+import org.openmrs.module.cpm.web.dto.SubmissionResponseDto;
+import org.openmrs.util.OpenmrsUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Controller
 public class CpmController {
+    @Autowired
+    private ApplicationContext appContext;
 
  	@RequestMapping(value = "module/cpm/proposals.list", method = RequestMethod.GET)
 	public String listProposals() {
@@ -128,24 +135,26 @@ public class CpmController {
 		newPackage.setId(conceptPackage.getId());
 		return newPackage;
 	}
-
+        
 	@RequestMapping(value = "/cpm/proposals/{proposalId}", method = RequestMethod.PUT)
 	public @ResponseBody ProposedConceptPackageDto updateProposal(@PathVariable final String proposalId,
                                                                   @RequestBody final ProposedConceptPackageDto updatedPackage) {
 
-		// TODO: some server side validation here... not null fields, valid email?
-		final ProposedConceptPackage conceptPackage = Context.getService(ProposedConceptService.class).getProposedConceptPackageById(Integer.valueOf(proposalId));
+            // TODO: some server side validation here... not null fields, valid email?
+            final ProposedConceptPackage conceptPackage = Context.getService(ProposedConceptService.class).getProposedConceptPackageById(Integer.valueOf(proposalId));
 
-		conceptPackage.setName(updatedPackage.getName());
-		conceptPackage.setEmail(updatedPackage.getEmail());
-		conceptPackage.setDescription(updatedPackage.getDescription());
+            conceptPackage.setName(updatedPackage.getName());
+            conceptPackage.setEmail(updatedPackage.getEmail());
+            conceptPackage.setDescription(updatedPackage.getDescription()); 
 
-
-        // TODO: remap concepts
-        updateProposedConcepts(conceptPackage, updatedPackage);
-
-        Context.getService(ProposedConceptService.class).saveProposedConceptPackage(conceptPackage);
-		return updatedPackage;
+            // TODO: remap concepts
+            updateProposedConcepts(conceptPackage, updatedPackage);
+        
+            RestTemplate restTemplate = appContext.getBean("submissionRestTemplate", RestTemplate.class);
+            restTemplate.postForObject("http://localhost:8081/openmrs-standalone/module/cpm/dictionarymanager/proposals.list", updatedPackage, SubmissionResponseDto.class);
+            
+            Context.getService(ProposedConceptService.class).saveProposedConceptPackage(conceptPackage);
+            return updatedPackage;
 	}
 
 	@RequestMapping(value = "/cpm/proposals/{proposalId}", method = RequestMethod.DELETE)

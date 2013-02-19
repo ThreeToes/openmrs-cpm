@@ -34,7 +34,7 @@ public class DictionaryManagerController {
     @Autowired
     private ApplicationContext appContext;
 
-    @RequestMapping(value = "/cpm/dictionarymanager/proposals", method = RequestMethod.POST)
+    @RequestMapping(value = "/cpm/dictionarymanager/proposals.list", method = RequestMethod.POST)
     public @ResponseBody
     SubmissionResponseDto submitProposal(@RequestBody final ProposedConceptResponsePackageDto incomingProposal) {
         appContext.getBean("submissionRestTemplate", RestTemplate.class);
