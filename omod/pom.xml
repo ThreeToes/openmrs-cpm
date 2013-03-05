@@ -19,6 +19,11 @@
 	
 	<dependencies>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.2.3</version>
+        </dependency>
 		<!-- 
 		Add other dependencies from parent's pom: 
 		<dependency> 
@@ -81,12 +86,7 @@
 		  <version>1.7</version>
 		  <type>maven-plugin</type>
 		</dependency>
-		
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-			<version>1.9.10</version>
-		</dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
