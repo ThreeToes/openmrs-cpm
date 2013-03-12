@@ -2,13 +2,16 @@ package org.openmrs.module.cpm;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.annotations.GenericGenerator;
 import org.openmrs.Auditable;
 import org.openmrs.User;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -45,42 +48,15 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
 	private Integer version;
 	
 	public ProposedConceptResponsePackage() {
-	}
-
-	/**
-	 * Create the server side Concept Proposal Package Response based on the proposer submitted Concept
-	 * Proposal Package.  This changes the status of the proposal to reflect that this is in the first state
-	 * of the server side workflow
-	 *
-	 * @param shareablePackage The Concept Proposal Package submitted by a client side proposer
-	 */
-
-	public ProposedConceptResponsePackage(final ProposedConceptPackage shareablePackage) {
-		super();
-		log.debug("Creating a ProposedConceptResponsePackage from: " + shareablePackage);
-
-		setName(shareablePackage.getName());
-		setEmail(shareablePackage.getEmail());
-		setDescription(shareablePackage.getDescription());
-		setProposedConceptPackageUuid(shareablePackage.getUuid());
-		setProposedConcepts(new HashSet<ProposedConceptResponse>());
-
-		if (shareablePackage.getProposedConcepts() != null) {
-			// For each of the proposals in the submitted ProposedConceptPackage we create and equivalent
-			// response item that will allow us to record additional details
-
-			for (final ProposedConcept currentProposal : shareablePackage.getProposedConcepts()) {
-				final ProposedConceptResponse proposalResponse  = new ProposedConceptResponse(currentProposal);
-				addProposedConcept(proposalResponse);
-			}
-		}
-
-		setStatus(PackageStatus.RECEIVED);
-		setVersion(0);
+		dateCreated = new Date();
+		dateChanged = new Date();
+		version = 0;
 	}
 
 	@Id
-	@Column(nullable = false)
+	@GeneratedValue(generator = "nativeIfNotAssigned")
+	@GenericGenerator(name = "nativeIfNotAssigned", strategy = "org.openmrs.api.db.hibernate.NativeIfNotAssignedIdentityGenerator")
+	@Column(name = "cpm_proposed_concept_response_package_id", nullable = false)
 	@Override
 	public Integer getId() {
 		return proposedConceptResponsePackageId;
@@ -91,7 +67,7 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
 		proposedConceptResponsePackageId = id;
 	}
 
-
+	@Column(name = "cpm_proposed_concept_package_uuid")
     public String getProposedConceptPackageUuid() {
     	return proposedConceptPackageUuid;
     }
@@ -100,7 +76,7 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
     	this.proposedConceptPackageUuid = proposedConceptPackageUuid;
     }
 
-	@Column(nullable = false)
+	@Column(name = "date_created", nullable = false)
 	@Temporal(TemporalType.DATE)
 	@Override
 	public Date getDateCreated() {
@@ -112,8 +88,9 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
     	this.dateCreated = dateCreated;
     }
 
+	@Column(name = "date_changed")
 	@Temporal(TemporalType.DATE)
-    @Override
+	@Override
 	public Date getDateChanged() {
     	return dateChanged;
     }
@@ -135,6 +112,7 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
     }
 
 	@ManyToOne
+	@JoinColumn(name = "creator")
 	@Override
 	public User getCreator() {
     	return creator;
@@ -146,6 +124,7 @@ public class ProposedConceptResponsePackage extends ShareablePackage<ProposedCon
     }
 
 	@ManyToOne
+	@JoinColumn(name = "changedBy")
     @Override
 	public User getChangedBy() {
     	return changedBy;

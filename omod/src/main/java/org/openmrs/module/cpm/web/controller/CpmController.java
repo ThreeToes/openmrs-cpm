@@ -2,13 +2,12 @@ package org.openmrs.module.cpm.web.controller;
 
 import org.springframework.context.ApplicationContext;
 import com.google.common.collect.Lists;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.commons.codec.binary.Base64;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptSearchResult;
+import org.openmrs.GlobalProperty;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.cpm.PackageStatus;
@@ -16,6 +15,7 @@ import org.openmrs.module.cpm.ProposedConcept;
 import org.openmrs.module.cpm.ProposedConceptPackage;
 import org.openmrs.module.cpm.ProposedConceptResponse;
 import org.openmrs.module.cpm.ProposedConceptResponsePackage;
+import org.openmrs.module.cpm.web.dto.Settings;
 import org.openmrs.module.cpm.api.ProposedConceptService;
 import org.openmrs.module.cpm.web.dto.ConceptDto;
 import org.openmrs.module.cpm.web.dto.ProposedConceptDto;
@@ -24,6 +24,9 @@ import org.openmrs.module.cpm.web.dto.ProposedConceptResponsePackageDto;
 import org.openmrs.module.cpm.web.dto.SubmissionDto;
 import org.openmrs.module.cpm.web.dto.SubmissionResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestOperations;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -53,21 +57,62 @@ public class CpmController {
     @Autowired
     private DefaultHttpClient httpClient;
 
+<<<<<<< HEAD
     @RequestMapping(value = "module/cpm/proposals.list", method = RequestMethod.GET)
     public String listProposals() {
         return "/module/cpm/proposals";
     }
+=======
+	//
+	// Pages
+	//
+
+	@RequestMapping(value = "module/cpm/proposals.list", method = RequestMethod.GET)
+	public String listProposals() {
+		return "/module/cpm/proposals";
+	}
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
 
     @RequestMapping(value = "module/cpm/proposalReview.list", method = RequestMethod.GET)
     public String listProposalReview() {
         return "/module/cpm/proposalReview";
     }
 
+<<<<<<< HEAD
     @RequestMapping(value = "/cpm/concepts", method = RequestMethod.GET)
     public @ResponseBody
     List<ConceptDto> findConcepts(@RequestParam final String query) {
         final ArrayList<ConceptDto> results = new ArrayList<ConceptDto>();
         final ConceptService conceptService = Context.getConceptService();
+=======
+	//
+	// Service endpoints
+	//
+
+	@RequestMapping(value = "/cpm/settings", method = RequestMethod.GET)
+	public @ResponseBody Settings getSettings() {
+		AdministrationService service = Context.getAdministrationService();
+		Settings settings = new Settings();
+		settings.setUrl(service.getGlobalProperty("cpm.url"));
+		settings.setUsername(service.getGlobalProperty("cpm.username"));
+		settings.setPassword(service.getGlobalProperty("cpm.password"));
+		return settings;
+	}
+
+	@RequestMapping(value = "/cpm/settings", method = RequestMethod.POST)
+	public @ResponseBody Settings postNewSettings(@RequestBody Settings settings) {
+		AdministrationService service = Context.getAdministrationService();
+		service.saveGlobalProperty(new GlobalProperty("cpm.url", settings.getUrl()));
+		service.saveGlobalProperty(new GlobalProperty("cpm.username", settings.getUsername()));
+		service.saveGlobalProperty(new GlobalProperty("cpm.password", settings.getPassword()));
+		return settings;
+	}
+
+	@RequestMapping(value = "/cpm/concepts", method = RequestMethod.GET)
+	public @ResponseBody List<ConceptDto> findConcepts(@RequestParam final String query) {
+		final ArrayList<ConceptDto> results = new ArrayList<ConceptDto>();
+		final ConceptService conceptService = Context.getConceptService();
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
 
         if (query.equals("")) {
             final List<Concept> allConcepts = conceptService.getAllConcepts("name", true, false);
@@ -182,6 +227,7 @@ public class CpmController {
 
     private ProposedConceptPackageDto submitProposedConcept(final ProposedConceptPackage conceptPackage) {
 
+<<<<<<< HEAD
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         UsernamePasswordCredentials credentials = new UsernamePasswordCredentials("admin", "Admin123");
         credentialsProvider.setCredentials(AuthScope.ANY, credentials);
@@ -192,6 +238,44 @@ public class CpmController {
         submission.setEmail(conceptPackage.getEmail());
         submission.setDescription(conceptPackage.getDescription());
         final SubmissionResponseDto result = submissionRestTemplate.postForObject("http://localhost:8080/openmrs/ws/cpm/dictionarymanager/proposals", submission, SubmissionResponseDto.class);
+=======
+		//
+		// Could not figure out how to get Spring to send a basic authentication request using the "proper" object approach
+		// see: https://github.com/johnsyweb/openmrs-cpm/wiki/Gotchas
+		//
+
+		AdministrationService service = Context.getAdministrationService();
+
+		SubmissionDto submission = new SubmissionDto();
+		submission.setName(conceptPackage.getName());
+		submission.setEmail(conceptPackage.getEmail());
+		submission.setDescription(conceptPackage.getDescription());
+
+		final ArrayList<ProposedConceptDto> list = new ArrayList<ProposedConceptDto>();
+		for (ProposedConcept proposedConcept: conceptPackage.getProposedConcepts()) {
+			final ProposedConceptDto conceptDto = new ProposedConceptDto();
+
+			// TODO: need to figure out how comments are going to be managed
+//			conceptDto.setComments(proposedConcept.getComments());
+
+			// concept details
+			final Concept concept = proposedConcept.getConcept();
+			conceptDto.setName(concept.getName().getName());
+			conceptDto.setDescription(concept.getDescription().getDescription());
+			conceptDto.setDatatype(concept.getDatatype().getName());
+
+			list.add(conceptDto);
+		}
+		submission.setConcepts(list);
+
+		final HttpHeaders headers = createHeaders(service.getGlobalProperty("cpm.username"), service.getGlobalProperty("cpm.password"));
+		final HttpEntity requestEntity = new HttpEntity<SubmissionDto>(submission, headers);
+
+		final String url = service.getGlobalProperty("cpm.url") + "/openmrs/ws/cpm/dictionarymanager/proposals";
+		submissionRestTemplate.exchange(url, HttpMethod.POST, requestEntity, SubmissionResponseDto.class);
+
+//		final SubmissionResponseDto result = submissionRestTemplate.postForObject("http://localhost:8080/openmrs/ws/cpm/dictionarymanager/proposals", submission, SubmissionResponseDto.class);
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
 
         conceptPackage.setStatus(PackageStatus.SUBMITTED);
         Context.getService(ProposedConceptService.class).saveProposedConceptPackage(conceptPackage);
@@ -199,11 +283,29 @@ public class CpmController {
         return createProposedConceptPackageDto(conceptPackage);
     }
 
+<<<<<<< HEAD
     @RequestMapping(value = "/cpm/proposals/{proposalId}", method = RequestMethod.DELETE)
     public void deleteProposal(@PathVariable final String proposalId) {
         final ProposedConceptService service = Context.getService(ProposedConceptService.class);
         service.deleteProposedConceptPackage(service.getProposedConceptPackageById(Integer.valueOf(proposalId)));
     }
+=======
+	private HttpHeaders createHeaders( final String username, final String password ){
+		final HttpHeaders httpHeaders = new HttpHeaders();
+		String auth = username + ":" + password;
+		byte[] encodedAuth = Base64.encodeBase64(
+		auth.getBytes(Charset.forName("US-ASCII")));
+		String authHeader = "Basic " + new String( encodedAuth );
+		httpHeaders.set("Authorization", authHeader);
+		return httpHeaders;
+	}
+
+	@RequestMapping(value = "/cpm/proposals/{proposalId}", method = RequestMethod.DELETE)
+	public void deleteProposal(@PathVariable final String proposalId) {
+		final ProposedConceptService service = Context.getService(ProposedConceptService.class);
+		service.deleteProposedConceptPackage(service.getProposedConceptPackageById(Integer.valueOf(proposalId)));
+	}
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
 
     private ProposedConceptPackageDto createProposedConceptPackageDto(final ProposedConceptPackage conceptProposalPackage) {
 
@@ -219,6 +321,7 @@ public class CpmController {
 
         for (final ProposedConcept conceptProposal : proposedConcepts) {
 
+<<<<<<< HEAD
             final ProposedConceptDto conceptProposalDto = new ProposedConceptDto();
             conceptProposalDto.setId(conceptProposal.getConcept().getConceptId());
             conceptProposalDto.setName(conceptProposal.getName());
@@ -227,6 +330,18 @@ public class CpmController {
 
             list.add(conceptProposalDto);
         }
+=======
+			final ProposedConceptDto conceptProposalDto = new ProposedConceptDto();
+			conceptProposalDto.setId(conceptProposal.getConcept().getConceptId());
+			conceptProposalDto.setName(conceptProposal.getConcept().getName().getName());
+			conceptProposalDto.setDatatype(conceptProposal.getConcept().getDatatype().getName());
+			conceptProposalDto.setStatus(conceptProposal.getStatus());
+
+			// TODO: comments
+
+			list.add(conceptProposalDto);
+		}
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
 
         conceptProposalPackageDto.setConcepts(list);
         return conceptProposalPackageDto;
@@ -279,6 +394,7 @@ public class CpmController {
         }
     }
 
+<<<<<<< HEAD
     private void addOrModifyProposedConcepts(ProposedConceptPackage conceptPackage,
             final ProposedConceptPackageDto packageDto) {
         //Add and modify concepts
@@ -299,6 +415,26 @@ public class CpmController {
                 proposedConcept.setName(newProposedConcept.getName());
                 proposedConcept.setDescription(newProposedConcept.getComments());
                 conceptPackage.addProposedConcept(proposedConcept);
+=======
+    private void addOrModifyProposedConcepts( ProposedConceptPackage conceptPackage,
+                                           final ProposedConceptPackageDto packageDto){
+            //Add and modify concepts
+            for (final ProposedConceptDto newProposedConcept : packageDto.getConcepts()) {
+                ProposedConcept proposedConcept = new ProposedConcept();
+                final ConceptService conceptService = Context.getConceptService();
+
+                if(conceptPackage.getProposedConcept(newProposedConcept.getId()) != null){
+                    //Modify already persisted concept
+                    proposedConcept = conceptPackage.getProposedConcept(newProposedConcept.getId());
+					// todo save comments
+                } else {
+                    //New concept added to the ProposedConceptPackage
+                    final Concept concept = conceptService.getConcept(newProposedConcept.getId());
+                    checkNotNull(concept,"Concept should not be null") ;
+                    proposedConcept.setConcept(concept);
+                    conceptPackage.addProposedConcept(proposedConcept);
+                }
+>>>>>>> 03c0edac77d4c6ca3dec48ef9c0261a21ba962b5
             }
         }
     }

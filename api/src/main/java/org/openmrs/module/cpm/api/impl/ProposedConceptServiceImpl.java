@@ -1,20 +1,18 @@
 package org.openmrs.module.cpm.api.impl;
 
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.APIException;
 import org.openmrs.api.impl.BaseOpenmrsService;
-import org.openmrs.module.cpm.ProposedConcept;
 import org.openmrs.module.cpm.ProposedConceptPackage;
 import org.openmrs.module.cpm.ProposedConceptResponsePackage;
 import org.openmrs.module.cpm.api.ProposedConceptService;
 import org.openmrs.module.cpm.api.db.ProposedConceptPackageDAO;
 import org.openmrs.module.cpm.api.db.ProposedConceptPackageResponseDAO;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 @Service("org.openmrs.module.cpm.api.ProposedConceptService")
 public class ProposedConceptServiceImpl extends BaseOpenmrsService implements ProposedConceptService {
@@ -81,5 +79,4 @@ public class ProposedConceptServiceImpl extends BaseOpenmrsService implements Pr
 		proposalResponseDao.deleteConceptProposalResponsePackage(conceptPackageResponse);
 	}
 
-	
 }

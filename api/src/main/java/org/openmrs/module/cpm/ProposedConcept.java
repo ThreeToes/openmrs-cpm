@@ -2,14 +2,16 @@ package org.openmrs.module.cpm;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.annotations.GenericGenerator;
+import org.openmrs.Concept;
 
 /**
  * This extends the SharedProposal to represent a persisted Concept Proposal on the proposers side
@@ -28,7 +30,7 @@ public class ProposedConcept extends ShareableProposal<ProposedConceptPackage> {
 	
 	private Integer proposedConceptId;
 	private Integer version;
-	
+
 	public ProposedConcept() {
 		super();
 		log.debug("Creating a ProposedConcept");
@@ -36,6 +38,8 @@ public class ProposedConcept extends ShareableProposal<ProposedConceptPackage> {
 	}
 	
 	@Id
+	@GeneratedValue(generator = "nativeIfNotAssigned")
+	@GenericGenerator(name = "nativeIfNotAssigned", strategy = "org.openmrs.api.db.hibernate.NativeIfNotAssignedIdentityGenerator")
 	@Column(name = "cpm_proposed_concept_id")
 	public Integer getId() {
 		return proposedConceptId;
@@ -44,7 +48,7 @@ public class ProposedConcept extends ShareableProposal<ProposedConceptPackage> {
 	public void setId(final Integer id) {
 		this.proposedConceptId = id;
 	}
-		
+
 	public Integer getVersion() {
 		return version;
 	}
@@ -59,5 +63,10 @@ public class ProposedConcept extends ShareableProposal<ProposedConceptPackage> {
 	public ProposedConceptPackage getProposedConceptPackage() {
 		return proposedConceptPackage;
 	}
-	
+
+	@ManyToOne
+	@JoinColumn(name = "concept_id", nullable = false)
+	public Concept getConcept() {
+		return concept;
+	}
 }
